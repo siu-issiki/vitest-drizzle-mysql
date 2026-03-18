@@ -1,0 +1,73 @@
+{
+  "name": "@siu-issiki/vitest-drizzle-mysql",
+  "version": "0.1.0",
+  "description": "Vitest environment for Drizzle ORM with MySQL - automatic transaction rollback per test case",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./environment": {
+      "import": "./dist/environment.js",
+      "types": "./dist/environment.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "cd test/basic && npm test",
+    "test:watch": "cd test/basic && npm run test:watch",
+    "test:install": "npm run build && cd test/basic && npm install",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down"
+  },
+  "keywords": [
+    "vitest",
+    "drizzle",
+    "drizzle-orm",
+    "testing",
+    "database",
+    "rollback",
+    "transaction",
+    "mysql",
+    "mysql2"
+  ],
+  "author": "siu-issiki",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/siu-issiki/vitest-drizzle-mysql.git"
+  },
+  "homepage": "https://github.com/siu-issiki/vitest-drizzle-mysql#readme",
+  "bugs": {
+    "url": "https://github.com/siu-issiki/vitest-drizzle-mysql/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "drizzle-orm": ">=0.29.0",
+    "vitest": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "drizzle-kit": "^0.31.0",
+    "drizzle-orm": "^0.44.0",
+    "mysql2": "^3.11.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^2.0.0"
+  }
+}
