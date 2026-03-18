@@ -1,4 +1,4 @@
-import { beforeEach, afterEach } from "vitest";
+import { beforeEach, afterEach, afterAll } from "vitest";
 import { DrizzleEnvironmentContext } from "./context.js";
 import {
   DrizzleEnvironmentOptions,
@@ -52,11 +52,12 @@ export function setupDrizzleEnvironment<
     get client(): TTransaction {
       const tx = context.getCurrentTransaction();
       if (!tx) {
-        console.warn(
-          "vDrizzle.client should be used in test or beforeEach functions because transaction has not yet started.",
+        throw new Error(
+          "vDrizzle.client is not available outside of a test case. " +
+            "Use it inside test() or beforeEach() functions.",
         );
       }
-      return tx as TTransaction;
+      return tx;
     },
   };
 
@@ -71,5 +72,9 @@ export function setupDrizzleEnvironment<
 
   afterEach(async () => {
     await context.rollbackTransaction();
+  });
+
+  afterAll(async () => {
+    await context.teardown();
   });
 }

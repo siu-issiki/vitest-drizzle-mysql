@@ -63,13 +63,18 @@ export class DrizzleEnvironmentContext<
       );
     }
 
-    return new Promise<TTransaction>((resolveOuter) => {
+    return new Promise<TTransaction>((resolveOuter, rejectOuter) => {
       this.state.transactionPromise = this.state
         .db!.transaction(async (tx) => {
           this.state.currentTransaction = tx;
 
-          if (this.options.setup) {
-            await this.options.setup(tx);
+          try {
+            if (this.options.setup) {
+              await this.options.setup(tx);
+            }
+          } catch (error) {
+            rejectOuter(error);
+            throw error;
           }
 
           resolveOuter(tx);
@@ -79,8 +84,10 @@ export class DrizzleEnvironmentContext<
               reject(new RollbackError());
           });
         })
-        .catch(() => {
-          // Swallow the RollbackError to prevent unhandled rejection
+        .catch((error) => {
+          if (!(error instanceof RollbackError)) {
+            rejectOuter(error);
+          }
         });
     });
   }

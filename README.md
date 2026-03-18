@@ -99,7 +99,47 @@ Uses a "Promise pending" pattern (inspired by [jest-prisma](https://github.com/p
 4. When the test ends, `reject()` is called, triggering a rollback
 5. The error is caught silently
 
-This approach works because MySQL's InnoDB engine supports transactions with full rollback capability.
+This approach works because MySQL's InnoDB engine supports transactions with rollback.
+
+## Limitations
+
+### Parallel test execution
+
+This library uses a single transaction slot per setup, so it does **not** support `test.concurrent` or parallel test files sharing the same setup. Configure Vitest to run tests sequentially:
+
+```ts
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    pool: "forks",
+    poolOptions: {
+      forks: { singleFork: true },
+    },
+  },
+});
+```
+
+### MySQL-specific caveats
+
+- **DDL statements** (`CREATE TABLE`, `ALTER TABLE`, etc.) cause an implicit commit in MySQL and cannot be rolled back. Run DDL in `beforeAll` outside the transaction.
+- **AUTO_INCREMENT** counters are not rolled back. Inserted rows are undone, but the counter continues incrementing.
+- **TRUNCATE TABLE** also causes an implicit commit. Use `DELETE FROM` if you need to clear data inside a transaction.
+
+## Development
+
+```bash
+# Start MySQL
+docker compose up -d
+
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Run tests
+cd test/basic && npm install && npm test
+```
 
 ## License
 
