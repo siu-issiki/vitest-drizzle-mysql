@@ -89,7 +89,7 @@ test("database is clean", async () => {
 
 Global variable available in all test files. Returns the current transaction client. Use it instead of your normal `db` instance.
 
-By default, `vDrizzle.client` is typed as `unknown`. To get proper types, add a declaration file to your test project:
+By default, `vDrizzle.client` is typed as `any`. For stricter typing, add a declaration file to your test project:
 
 ```ts
 // vitest-drizzle.d.ts

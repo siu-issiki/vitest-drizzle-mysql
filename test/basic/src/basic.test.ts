@@ -1,3 +1,4 @@
+import { DrizzleEnvironmentContext } from "@siu-issiki/vitest-drizzle-mysql";
 import { users } from "./schema.js";
 
 describe("transaction rollback", () => {
@@ -30,8 +31,54 @@ describe("transaction rollback", () => {
 
 describe("vDrizzle.client type safety", () => {
   test("client is available and typed inside test", async () => {
-    // This verifies client is not just defined but actually usable as a transaction
     const result = await vDrizzle.client.select().from(users);
     expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe("error handling", () => {
+  test("setup failure propagates from beginTransaction", async () => {
+    const context = new DrizzleEnvironmentContext({
+      client: () => ({
+        transaction: async (cb: (tx: unknown) => Promise<unknown>) => {
+          return cb({});
+        },
+      }),
+      setup: () => {
+        throw new Error("setup failed");
+      },
+    });
+    await context.setup();
+    await expect(context.beginTransaction()).rejects.toThrow("setup failed");
+  });
+
+  test("teardown failure is thrown after rollback", async () => {
+    const context = new DrizzleEnvironmentContext({
+      client: () => ({
+        transaction: async (cb: (tx: unknown) => Promise<unknown>) => {
+          return cb({}).catch(() => {});
+        },
+      }),
+      teardown: () => {
+        throw new Error("teardown failed");
+      },
+    });
+    await context.setup();
+    await context.beginTransaction();
+    await expect(context.rollbackTransaction()).rejects.toThrow(
+      "teardown failed",
+    );
+  });
+
+  test("beginTransaction throws if db is not initialized", async () => {
+    const context = new DrizzleEnvironmentContext({
+      client: () => ({
+        transaction: async () => {},
+      }),
+    });
+    // Don't call setup() — db is null
+    await expect(context.beginTransaction()).rejects.toThrow(
+      "Database client is not initialized",
+    );
   });
 });
