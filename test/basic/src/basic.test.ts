@@ -81,4 +81,25 @@ describe("error handling", () => {
       "Database client is not initialized",
     );
   });
+
+  test("rollback failure is propagated instead of swallowed", async () => {
+    const context = new DrizzleEnvironmentContext({
+      client: () => ({
+        transaction: async (cb: (tx: unknown) => Promise<unknown>) => {
+          // Simulate: execute callback, then fail on rollback
+          const result = cb({});
+          // When the inner promise rejects (RollbackError), the transaction
+          // implementation would attempt ROLLBACK. Simulate that failing:
+          return result.catch(() => {
+            throw new Error("rollback failed");
+          });
+        },
+      }),
+    });
+    await context.setup();
+    await context.beginTransaction();
+    await expect(context.rollbackTransaction()).rejects.toThrow(
+      "rollback failed",
+    );
+  });
 });

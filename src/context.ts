@@ -9,7 +9,7 @@ interface EnvironmentState<TTransaction> {
   currentTransaction: TTransaction | null;
   transactionPromise: Promise<unknown> | null;
   resolveTransaction: (() => void) | null;
-  rollbackError: RollbackError | null;
+  transactionError: unknown;
 }
 
 export class DrizzleEnvironmentContext<
@@ -26,7 +26,7 @@ export class DrizzleEnvironmentContext<
       currentTransaction: null,
       transactionPromise: null,
       resolveTransaction: null,
-      rollbackError: null,
+      transactionError: null,
     };
   }
 
@@ -85,9 +85,14 @@ export class DrizzleEnvironmentContext<
           });
         })
         .catch((error) => {
-          if (!(error instanceof RollbackError)) {
-            rejectOuter(error);
+          if (error instanceof RollbackError) {
+            return; // Expected: swallow the rollback trigger
           }
+          // Unexpected error (e.g. rollback SQL failure, connection lost).
+          // Store for rollbackTransaction() to detect, and reject outer
+          // promise (no-op if already resolved).
+          this.state.transactionError = error;
+          rejectOuter(error);
         });
     });
   }
@@ -115,15 +120,21 @@ export class DrizzleEnvironmentContext<
       try {
         await this.state.transactionPromise;
       } catch {
-        // Expected: RollbackError
+        // Errors are tracked via state.transactionError
       }
       this.state.transactionPromise = null;
     }
 
+    // Check for unexpected transaction errors (e.g. rollback SQL failure)
+    const transactionError = this.state.transactionError;
+    this.state.transactionError = null;
     this.state.currentTransaction = null;
 
     if (teardownError) {
       throw teardownError;
+    }
+    if (transactionError) {
+      throw transactionError;
     }
   }
 
