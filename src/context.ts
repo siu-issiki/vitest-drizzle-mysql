@@ -96,11 +96,13 @@ export class DrizzleEnvironmentContext<
    * Rollback the transaction
    */
   async rollbackTransaction(): Promise<void> {
+    let teardownError: unknown = null;
+
     if (this.options.teardown && this.state.currentTransaction) {
       try {
         await this.options.teardown(this.state.currentTransaction);
       } catch (error) {
-        console.error("Error in teardown function:", error);
+        teardownError = error;
       }
     }
 
@@ -119,6 +121,10 @@ export class DrizzleEnvironmentContext<
     }
 
     this.state.currentTransaction = null;
+
+    if (teardownError) {
+      throw teardownError;
+    }
   }
 
   /**

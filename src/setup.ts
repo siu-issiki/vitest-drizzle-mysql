@@ -7,6 +7,20 @@ import {
 } from "./types.js";
 
 declare global {
+  /**
+   * Global variable providing the current test transaction.
+   *
+   * To get proper types, add a declaration file in your test project:
+   * ```ts
+   * // vitest-drizzle.d.ts
+   * import type { MySql2Database } from "drizzle-orm/mysql2";
+   * declare global {
+   *   var vDrizzle: import("@siu-issiki/vitest-drizzle-mysql").VitestDrizzleContext<
+   *     Parameters<Parameters<MySql2Database["transaction"]>[0]>[0]
+   *   >;
+   * }
+   * ```
+   */
   // eslint-disable-next-line no-var
   var vDrizzle: VitestDrizzleContext;
 }

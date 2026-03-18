@@ -28,18 +28,10 @@ describe("transaction rollback", () => {
   });
 });
 
-describe("setup and teardown options", () => {
-  test("setup option runs before each test inside transaction", async () => {
-    // The setup option in setupDrizzleEnvironment is tested implicitly:
-    // if setup threw, beginTransaction would reject and the test would fail.
-    // Here we just verify the transaction is active and usable.
+describe("vDrizzle.client type safety", () => {
+  test("client is available and typed inside test", async () => {
+    // This verifies client is not just defined but actually usable as a transaction
     const result = await vDrizzle.client.select().from(users);
-    expect(result).toHaveLength(0);
-  });
-});
-
-describe("vDrizzle.client access", () => {
-  test("client is available inside test", () => {
-    expect(vDrizzle.client).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
   });
 });

@@ -42,7 +42,8 @@ export interface TransactionCapableClient<TTransaction = unknown> {
 /**
  * Type for the vDrizzle global variable
  */
-export interface VitestDrizzleContext<TTransaction = unknown> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface VitestDrizzleContext<TTransaction = any> {
   /**
    * Transaction available for use in the current test case
    * This transaction is automatically rolled back when the test ends

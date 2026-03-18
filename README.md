@@ -89,6 +89,20 @@ test("database is clean", async () => {
 
 Global variable available in all test files. Returns the current transaction client. Use it instead of your normal `db` instance.
 
+By default, `vDrizzle.client` is typed as `unknown`. To get proper types, add a declaration file to your test project:
+
+```ts
+// vitest-drizzle.d.ts
+import type { MySql2Database } from "drizzle-orm/mysql2";
+import type { VitestDrizzleContext } from "@siu-issiki/vitest-drizzle-mysql";
+
+declare global {
+  var vDrizzle: VitestDrizzleContext<
+    Parameters<Parameters<MySql2Database["transaction"]>[0]>[0]
+  >;
+}
+```
+
 ## How it works
 
 Uses a "Promise pending" pattern (inspired by [jest-prisma](https://github.com/paladinoli/jest-prisma)):
